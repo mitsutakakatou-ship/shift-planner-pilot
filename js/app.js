@@ -53,10 +53,10 @@ function renderShell() {
   appRoot.innerHTML = `
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark"></div>
+        <div class="brand-mark">⚡</div>
         <div class="brand-text">
-          <div class="name">SHIFT/OS</div>
-          <div class="sub">care facility scheduler</div>
+          <div class="name brand-wordmark">爆速シフトくん</div>
+          <div class="sub">INSTANT SHIFT SCHEDULING</div>
         </div>
       </div>
       <nav class="nav">

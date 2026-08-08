@@ -82,10 +82,43 @@ body {
   border-radius: 8px;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 50%, transparent));
 }
 .brand-text { line-height: 1.2; }
 .brand-text .name { font-weight: 700; font-size: 14px; letter-spacing: 0.02em; }
-.brand-text .sub { font-size: 11px; color: var(--text-faint); font-family: var(--font-mono); }
+.brand-text .sub {
+  font-size: 10px; color: var(--text-faint); font-family: var(--font-mono);
+  letter-spacing: 0.06em; margin-top: 2px;
+}
+
+.brand-text .brand-wordmark {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-style: italic;
+  font-size: 15.5px;
+  letter-spacing: -0.02em;
+  padding-left: 2px;
+  transform: skewX(-10deg);
+  background: linear-gradient(100deg, var(--text) 0%, var(--accent) 55%, var(--accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.brand-wordmark::after {
+  content: "";
+  position: absolute;
+  left: 1px; right: 8%;
+  bottom: -3px;
+  height: 2.5px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transform: skewX(-10deg);
+  opacity: 0.85;
+}
 
 .nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 .nav-item {
