@@ -109,14 +109,14 @@ function openStaffModal(ctx, existing) {
 }
 
 function render(container, ctx) {
-  const { state } = ctx;
+  const { state, isAdmin } = ctx;
   container.innerHTML = `
     <div class="page-header">
       <div>
         <div class="page-title">職員マスタ</div>
-        <div class="page-desc">氏名・職種・ユニット・資格要件・常勤区分・対応可能な勤務パターンなどを管理します</div>
+        <div class="page-desc">氏名・職種・ユニット・資格要件・常勤区分・対応可能な勤務パターンなどを管理します${isAdmin ? "" : "（閲覧のみ。編集には管理者モードへの切替が必要です）"}</div>
       </div>
-      <div class="header-actions"><button class="btn btn-primary" id="btn-add-staff">＋ 職員を追加</button></div>
+      <div class="header-actions">${isAdmin ? `<button class="btn btn-primary" id="btn-add-staff">＋ 職員を追加</button>` : ""}</div>
     </div>
     <div class="card" style="padding:0;">
       <table>
@@ -140,8 +140,10 @@ function render(container, ctx) {
               <td>${s.nightExempt ? "✓" : "—"}</td>
               <td>${s.annualPaidLeaveGranted}日</td>
               <td style="text-align:right;">
-                <button class="btn btn-ghost btn-sm" data-edit="${s.id}">編集</button>
-                <button class="btn btn-ghost btn-sm" data-del="${s.id}" style="color:var(--danger);">削除</button>
+                ${isAdmin ? `
+                  <button class="btn btn-ghost btn-sm" data-edit="${s.id}">編集</button>
+                  <button class="btn btn-ghost btn-sm" data-del="${s.id}" style="color:var(--danger);">削除</button>
+                ` : ""}
               </td>
             </tr>`;
           }).join("")}
@@ -151,7 +153,7 @@ function render(container, ctx) {
     <p class="hint" style="margin-top:12px;">※本パイロットでは資格の種類は「配置基準に算入可能か」の1フラグで簡略化しています。</p>
   `;
 
-  container.querySelector("#btn-add-staff").addEventListener("click", () => openStaffModal(ctx, null));
+  container.querySelector("#btn-add-staff")?.addEventListener("click", () => openStaffModal(ctx, null));
   container.querySelectorAll("[data-edit]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const s = state.staff.find((x) => x.id === btn.dataset.edit);

@@ -5,7 +5,7 @@ import { generateMonthlySchedule } from "../schedule-generator.js";
 const WEEKDAY_JA = ["日","月","火","水","木","金","土"];
 
 function render(container, ctx) {
-  const { state, month } = ctx;
+  const { state, month, isAdmin } = ctx;
   const nd = daysInMonth(month.year, month.month);
   const { warnings } = evaluateMonth(state, month.year, month.month);
   const warnDates = new Set(warnings.filter((w) => w.date).map((w) => w.date));
@@ -23,7 +23,7 @@ function render(container, ctx) {
     <div class="page-header">
       <div>
         <div class="page-title">月間シフト作成</div>
-        <div class="page-desc">★ボタンで希望休の申請を切替、プルダウンで勤務パターンを割り当てます。</div>
+        <div class="page-desc">${isAdmin ? "★ボタンで希望休の申請を切替、プルダウンで勤務パターンを割り当てます。" : "★ボタンで希望休を申請できます。勤務の割当は管理者モードでのみ変更できます。"}</div>
       </div>
       <div class="header-actions">
         <div class="month-nav">
@@ -31,13 +31,13 @@ function render(container, ctx) {
           <span class="label">${month.year} / ${String(month.month).padStart(2,"0")}</span>
           <button class="btn btn-ghost btn-sm" id="next-month">→</button>
         </div>
-        <button class="btn btn-primary" id="btn-auto">🪄 自動作成</button>
+        ${isAdmin ? `<button class="btn btn-primary" id="btn-auto">🪄 自動作成</button>` : ""}
         <button class="btn" id="btn-print">🖨 印刷 / PDF</button>
       </div>
     </div>
-    <p class="hint" style="margin-top:-10px;margin-bottom:16px;">
+    ${isAdmin ? `<p class="hint" style="margin-top:-10px;margin-bottom:16px;">
       「自動作成」は<b>空欄のセルだけ</b>を要件（配置基準・資格・夜勤明け休み・11時間インターバル・週40時間・月間休日数など）に沿って埋めます。既に入力済みのセルと希望休は上書きしません。埋められない箇所は空欄のまま残り、ダッシュボードに警告として表示されます。
-    </p>
+    </p>` : ""}
 
     <div class="schedule-scroll">
       <table class="schedule-table">
@@ -74,7 +74,7 @@ function render(container, ctx) {
                 return `<td class="cell-wrap ${cls}" style="${hasWarn ? "box-shadow: inset 0 0 0 1px var(--danger);" : ""}">
                   <div class="cell-inner">
                     <button type="button" class="req-toggle ${requested ? "on" : ""}" data-staff="${s.id}" data-date="${dateISO}" title="${requested ? "希望休の申請を解除する" : "希望休を申請する"}">${requested ? "★" : "☆"}</button>
-                    <select class="${selClass}" data-staff="${s.id}" data-date="${dateISO}" title="${requested ? "希望休あり" : ""}">
+                    <select class="${selClass}" data-staff="${s.id}" data-date="${dateISO}" title="${requested ? "希望休あり" : ""}" ${isAdmin ? "" : "disabled"}>
                       <option value="" ${!val?"selected":""}>・</option>
                       ${availablePatterns.map((p) => `<option value="${p.id}" ${val===p.id?"selected":""}>${p.name}</option>`).join("")}
                       <option value="OFF" ${val==="OFF"?"selected":""}>公休</option>
@@ -117,7 +117,7 @@ function render(container, ctx) {
     });
   });
 
-  container.querySelector("#btn-auto").addEventListener("click", () => {
+  container.querySelector("#btn-auto")?.addEventListener("click", () => {
     if (!confirm(`${month.year}年${month.month}月の未入力セルを、希望休と要件をもとに自動で埋めます。入力済みのセルは変更しません。実行しますか？`)) return;
     const result = generateMonthlySchedule(state, month.year, month.month);
     ctx.save();

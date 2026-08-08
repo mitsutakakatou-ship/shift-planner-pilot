@@ -61,6 +61,7 @@ function defaultState() {
       overtimeMonthlyCapMin: 45 * 60,
       overtimeAnnualCapMin: 360 * 60,
       deformedLaborSystem: false,
+      adminPin: null,
     },
     staff: defaultStaff(),
     patterns: defaultPatterns(),

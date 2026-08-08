@@ -1,4 +1,5 @@
 import { loadState, saveState, resetState, defaultState } from "./data.js";
+import { isAdminMode, tryEnterAdminMode, exitAdminMode, changeAdminPin } from "./auth.js";
 import * as dashboard from "./views/dashboard.js";
 import * as staffView from "./views/staff.js";
 import * as patternsView from "./views/patterns.js";
@@ -43,6 +44,7 @@ function ctx() {
   return {
     state,
     month,
+    isAdmin: isAdminMode(),
     save: () => saveState(state),
     rerender,
     changeMonth,
@@ -50,6 +52,7 @@ function ctx() {
 }
 
 function renderShell() {
+  const admin = isAdminMode();
   appRoot.innerHTML = `
     <aside class="sidebar">
       <div class="brand">
@@ -66,9 +69,13 @@ function renderShell() {
           </div>`).join("")}
       </nav>
       <div class="sidebar-foot">
+        <div class="theme-toggle" id="mode-toggle" title="${admin ? "クリックで職員モードに戻す" : "クリックでPINを入力し管理者モードに切替"}">
+          <span>権限</span><span id="mode-label" style="${admin ? "color:var(--warn);font-weight:700;" : ""}">${admin ? "管理者" : "職員（閲覧のみ）"}</span>
+        </div>
+        ${admin ? `<button class="btn btn-ghost btn-sm" id="btn-change-pin" style="width:100%;">管理者PINを変更</button>` : ""}
         <div class="theme-toggle" id="theme-toggle"><span>Theme</span><span id="theme-label"></span></div>
-        <button class="btn btn-ghost btn-sm" id="btn-reset" style="width:100%;">サンプルデータにリセット</button>
-        <div class="pilot-badge">PILOT BUILD<br>データはこの端末のブラウザ内にのみ保存されます（サーバー保存なし・認証なし）</div>
+        ${admin ? `<button class="btn btn-ghost btn-sm" id="btn-reset" style="width:100%;">サンプルデータにリセット</button>` : ""}
+        <div class="pilot-badge">PILOT BUILD<br>データはこの端末のブラウザ内にのみ保存されます（サーバー保存なし・認証なし）<br>「管理者モード」は誤操作防止用の簡易的な制限で、本格的なセキュリティではありません。</div>
       </div>
     </aside>
     <main class="main" id="main"></main>
@@ -89,10 +96,25 @@ function renderShell() {
     updateThemeLabel();
   });
 
-  appRoot.querySelector("#btn-reset").addEventListener("click", () => {
+  appRoot.querySelector("#mode-toggle").addEventListener("click", () => {
+    if (isAdminMode()) {
+      exitAdminMode();
+    } else {
+      tryEnterAdminMode(state, () => saveState(state));
+    }
+    renderShell();
+    rerender();
+  });
+
+  appRoot.querySelector("#btn-change-pin")?.addEventListener("click", () => {
+    changeAdminPin(state, () => saveState(state));
+  });
+
+  appRoot.querySelector("#btn-reset")?.addEventListener("click", () => {
     if (!confirm("すべてのデータを消去し、サンプルデータに戻します。よろしいですか？")) return;
     resetState();
     Object.assign(state, defaultState());
+    renderShell();
     rerender();
   });
 }

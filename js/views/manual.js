@@ -1,4 +1,4 @@
-function render(container) {
+function render(container, ctx) {
   container.innerHTML = `
     <div class="page-header">
       <div>
@@ -56,9 +56,23 @@ function render(container) {
     </div>
 
     <div class="card">
+      <div class="section-title" style="margin-top:0;">管理者モード / 職員モード</div>
+      <p class="hint" style="font-size:13px;line-height:1.9;">
+        サイドバー下部の「権限」をクリックすると、<b>管理者モード</b>と<b>職員（閲覧のみ）モード</b>を切り替えられます。
+      </p>
+      <ul class="hint" style="font-size:13px;line-height:1.9;padding-left:18px;">
+        <li><b>職員モード</b>：すべての画面を閲覧できますが、入力できるのは月間シフト作成画面の<b>★（希望休の申請）ボタンだけ</b>です。職員マスタ・勤務パターンの追加/編集/削除、セルへの勤務割当、自動作成、サンプルデータのリセットはできません。</li>
+        <li><b>管理者モード</b>：すべての操作ができます。初めて管理者モードに切り替える際にPIN（4文字以上）を設定し、以降はそのPINの入力が必要です。PINはサイドバーの「管理者PINを変更」からいつでも変更できます。</li>
+      </ul>
+      <p class="hint" style="font-size:12.5px;line-height:1.8;margin-top:10px;">
+        ※これはサーバーを持たないパイロット版の中での「現場の共用端末での誤操作防止」を目的とした簡易的な制限です。ブラウザの開発者ツールなどを使えば回避できてしまうため、本格的なアクセス制御ではありません。
+      </p>
+    </div>
+
+    <div class="card">
       <div class="section-title" style="margin-top:0;">データについて</div>
       <p class="hint" style="font-size:13px;line-height:1.9;">
-        このパイロット版はサーバーを持たず、入力したデータはこの端末のブラウザ内（localStorage）にのみ保存されます。別の端末・別のブラウザからは参照できません。サイドバーの「サンプルデータにリセット」を押すと、全データを消去して初期状態に戻ります。誤って押さないようご注意ください。
+        このパイロット版はサーバーを持たず、入力したデータはこの端末のブラウザ内（localStorage）にのみ保存されます。別の端末・別のブラウザからは参照できません。管理者モードでサイドバーの「サンプルデータにリセット」を押すと、全データを消去して初期状態に戻ります。誤って押さないようご注意ください。
       </p>
     </div>
   `;

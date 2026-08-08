@@ -73,14 +73,14 @@ function openPatternModal(ctx, existing) {
 }
 
 function render(container, ctx) {
-  const { state } = ctx;
+  const { state, isAdmin } = ctx;
   container.innerHTML = `
     <div class="page-header">
       <div>
         <div class="page-title">勤務パターン</div>
-        <div class="page-desc">最大${MAX_PATTERNS}種類まで登録できます（現在 ${state.patterns.length} 件）</div>
+        <div class="page-desc">最大${MAX_PATTERNS}種類まで登録できます（現在 ${state.patterns.length} 件）${isAdmin ? "" : " ／ 閲覧のみ。編集には管理者モードへの切替が必要です"}</div>
       </div>
-      <div class="header-actions"><button class="btn btn-primary" id="btn-add-pattern" ${state.patterns.length >= MAX_PATTERNS ? "disabled" : ""}>＋ パターンを追加</button></div>
+      <div class="header-actions">${isAdmin ? `<button class="btn btn-primary" id="btn-add-pattern" ${state.patterns.length >= MAX_PATTERNS ? "disabled" : ""}>＋ パターンを追加</button>` : ""}</div>
     </div>
     <div class="card" style="padding:0;">
       <table>
@@ -95,8 +95,10 @@ function render(container, ctx) {
               <td>${p.requiredQualifiedCount}名</td>
               <td>${p.isNight ? "🌙" : "—"}</td>
               <td style="text-align:right;">
-                <button class="btn btn-ghost btn-sm" data-edit="${p.id}">編集</button>
-                <button class="btn btn-ghost btn-sm" data-del="${p.id}" style="color:var(--danger);">削除</button>
+                ${isAdmin ? `
+                  <button class="btn btn-ghost btn-sm" data-edit="${p.id}">編集</button>
+                  <button class="btn btn-ghost btn-sm" data-del="${p.id}" style="color:var(--danger);">削除</button>
+                ` : ""}
               </td>
             </tr>`).join("")}
         </tbody>
