@@ -3,12 +3,14 @@ import * as dashboard from "./views/dashboard.js";
 import * as staffView from "./views/staff.js";
 import * as patternsView from "./views/patterns.js";
 import * as scheduleView from "./views/schedule.js";
+import * as manualView from "./views/manual.js";
 
 const NAV_ITEMS = [
   { key: "dashboard", label: "ダッシュボード", icon: "◆", view: dashboard },
   { key: "schedule", label: "月間シフト作成", icon: "▦", view: scheduleView },
   { key: "staff", label: "職員マスタ", icon: "◎", view: staffView },
   { key: "patterns", label: "勤務パターン", icon: "◷", view: patternsView },
+  { key: "manual", label: "マニュアル", icon: "？", view: manualView },
 ];
 
 const now = new Date();

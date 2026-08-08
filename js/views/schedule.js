@@ -1,5 +1,6 @@
 import { daysInMonth, toISO, evaluateMonth } from "../rules.js";
 import { assignmentKey } from "../data.js";
+import { generateMonthlySchedule } from "../schedule-generator.js";
 
 const WEEKDAY_JA = ["日","月","火","水","木","金","土"];
 
@@ -30,9 +31,13 @@ function render(container, ctx) {
           <span class="label">${month.year} / ${String(month.month).padStart(2,"0")}</span>
           <button class="btn btn-ghost btn-sm" id="next-month">→</button>
         </div>
+        <button class="btn btn-primary" id="btn-auto">🪄 自動作成</button>
         <button class="btn" id="btn-print">🖨 印刷 / PDF</button>
       </div>
     </div>
+    <p class="hint" style="margin-top:-10px;margin-bottom:16px;">
+      「自動作成」は<b>空欄のセルだけ</b>を要件（配置基準・資格・夜勤明け休み・11時間インターバル・週40時間・月間休日数など）に沿って埋めます。既に入力済みのセルと希望休は上書きしません。埋められない箇所は空欄のまま残り、ダッシュボードに警告として表示されます。
+    </p>
 
     <div class="schedule-scroll">
       <table class="schedule-table">
@@ -105,6 +110,14 @@ function render(container, ctx) {
       ctx.save();
       ctx.rerender();
     });
+  });
+
+  container.querySelector("#btn-auto").addEventListener("click", () => {
+    if (!confirm(`${month.year}年${month.month}月の未入力セルを、希望休と要件をもとに自動で埋めます。入力済みのセルは変更しません。実行しますか？`)) return;
+    const result = generateMonthlySchedule(state, month.year, month.month);
+    ctx.save();
+    ctx.rerender();
+    alert(`自動作成が完了しました。\n新たに割り当てたセル：${result.filledCount}件\n\n残っている警告はダッシュボードで確認してください。要件をすべて満たせず空欄のまま残っている箇所がある場合も、そこに警告が表示されます。`);
   });
 
   container.querySelector("#btn-print").addEventListener("click", () => window.print());
