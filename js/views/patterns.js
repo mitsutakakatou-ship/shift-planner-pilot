@@ -1,3 +1,5 @@
+import { allowedPatternIdsFor } from "../data.js";
+
 const MAX_PATTERNS = 10;
 
 function openPatternModal(ctx, existing) {
@@ -57,6 +59,11 @@ function openPatternModal(ctx, existing) {
       ctx.state.patterns[idx] = updated;
     } else {
       if (ctx.state.patterns.length >= MAX_PATTERNS) { alert(`勤務パターンは最大${MAX_PATTERNS}種類までです。`); return; }
+      // 新規パターンは全職員の「対応可能」に初期反映する（個別に対応外へ変更は職員マスタで可能）
+      // ※未設定（旧データ＝全対応扱い）の職員は、現状の全パターンで明示化してから新パターンを足す
+      ctx.state.staff.forEach((s) => {
+        s.allowedPatternIds = [...allowedPatternIdsFor(s, ctx.state.patterns), updated.id];
+      });
       ctx.state.patterns.push(updated);
     }
     ctx.save();
@@ -107,6 +114,7 @@ function render(container, ctx) {
       const id = btn.dataset.del;
       state.patterns = state.patterns.filter((x) => x.id !== id);
       Object.keys(state.assignments).forEach((k) => { if (state.assignments[k] === id) delete state.assignments[k]; });
+      state.staff.forEach((s) => { if (s.allowedPatternIds) s.allowedPatternIds = s.allowedPatternIds.filter((pid) => pid !== id); });
       ctx.save();
       ctx.rerender();
     });

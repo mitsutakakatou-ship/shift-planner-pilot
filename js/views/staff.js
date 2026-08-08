@@ -1,3 +1,5 @@
+import { allowedPatternIdsFor } from "../data.js";
+
 function roleTagClass(role) {
   if (role === "看護師") return "tag tag-role-nurse";
   if (role === "児童発達支援管理責任者") return "tag tag-role-kihatsukan";
@@ -7,11 +9,13 @@ function roleTagClass(role) {
 
 function openStaffModal(ctx, existing) {
   const isEdit = !!existing;
+  const patterns = ctx.state.patterns;
   const s = existing || {
     id: `s_${Date.now()}`, name: "", role: "児童指導員・保育士", unit: 1,
     employment: "常勤", qualified: true, reducedHours: false, reducedHoursLimitMin: 360,
-    nightExempt: false, annualPaidLeaveGranted: 10,
+    nightExempt: false, annualPaidLeaveGranted: 10, allowedPatternIds: patterns.map((p) => p.id),
   };
+  const currentAllowed = new Set(allowedPatternIdsFor(s, patterns));
 
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
@@ -48,6 +52,16 @@ function openStaffModal(ctx, existing) {
       <div class="checkbox-row"><input type="checkbox" id="f-qualified" ${s.qualified?"checked":""}> 資格・任用要件を満たしている（配置基準に算入可）</div>
       <div class="checkbox-row" style="margin-top:8px;"><input type="checkbox" id="f-reduced" ${s.reducedHours?"checked":""}> 育児短時間勤務の対象</div>
       <div class="checkbox-row" style="margin-top:8px;"><input type="checkbox" id="f-nightexempt" ${s.nightExempt?"checked":""}> 深夜業免除の対象（育児・介護等）</div>
+      <div class="divider"></div>
+      <label>対応可能な勤務パターン</label>
+      ${patterns.length === 0
+        ? `<p class="hint">先に「勤務パターン」画面でパターンを登録してください。</p>`
+        : `<div class="field-row" id="f-patterns" style="gap:14px;">
+            ${patterns.map((p) => `
+              <div class="checkbox-row"><input type="checkbox" data-pattern="${p.id}" ${currentAllowed.has(p.id) ? "checked" : ""}> ${p.name}</div>
+            `).join("")}
+          </div>
+          <p class="hint" style="margin-top:6px;">チェックを外したパターンは、この職員のシフト作成セルの選択肢から外れ、自動作成でも割り当てられなくなります。</p>`}
       <div class="modal-actions">
         <button class="btn btn-ghost" id="f-cancel">キャンセル</button>
         <button class="btn btn-primary" id="f-save">保存</button>
@@ -66,6 +80,9 @@ function openStaffModal(ctx, existing) {
   backdrop.querySelector("#f-save").addEventListener("click", () => {
     const name = backdrop.querySelector("#f-name").value.trim();
     if (!name) { backdrop.querySelector("#f-name").focus(); return; }
+    const allowedPatternIds = Array.from(backdrop.querySelectorAll("[data-pattern]"))
+      .filter((el) => el.checked)
+      .map((el) => el.dataset.pattern);
     const updated = {
       ...s,
       name,
@@ -77,6 +94,7 @@ function openStaffModal(ctx, existing) {
       qualified: backdrop.querySelector("#f-qualified").checked,
       reducedHours: reducedCheckbox.checked,
       nightExempt: backdrop.querySelector("#f-nightexempt").checked,
+      allowedPatternIds,
     };
     if (isEdit) {
       const idx = ctx.state.staff.findIndex((x) => x.id === s.id);
@@ -96,23 +114,28 @@ function render(container, ctx) {
     <div class="page-header">
       <div>
         <div class="page-title">職員マスタ</div>
-        <div class="page-desc">氏名・職種・ユニット・資格要件・常勤区分などを管理します</div>
+        <div class="page-desc">氏名・職種・ユニット・資格要件・常勤区分・対応可能な勤務パターンなどを管理します</div>
       </div>
       <div class="header-actions"><button class="btn btn-primary" id="btn-add-staff">＋ 職員を追加</button></div>
     </div>
     <div class="card" style="padding:0;">
       <table>
         <thead><tr>
-          <th>氏名</th><th>職種</th><th>ユニット</th><th>雇用形態</th><th>資格</th><th>育児短時間</th><th>深夜業免除</th><th>年休付与</th><th></th>
+          <th>氏名</th><th>職種</th><th>ユニット</th><th>雇用形態</th><th>資格</th><th>対応パターン</th><th>育児短時間</th><th>深夜業免除</th><th>年休付与</th><th></th>
         </tr></thead>
         <tbody>
-          ${state.staff.map((s) => `
+          ${state.staff.map((s) => {
+            const allowed = allowedPatternIdsFor(s, state.patterns);
+            const allAllowed = allowed.length === state.patterns.length;
+            const names = state.patterns.filter((p) => allowed.includes(p.id)).map((p) => p.name);
+            return `
             <tr>
               <td>${s.name}</td>
               <td><span class="${roleTagClass(s.role)}">${s.role}</span></td>
               <td>${s.unit ? `U${s.unit}` : "—"}</td>
               <td>${s.employment}</td>
               <td>${s.qualified ? "✓" : "—"}</td>
+              <td style="font-size:11px;color:var(--text-dim);">${allAllowed ? "全パターン" : (names.join("・") || "なし")}</td>
               <td>${s.reducedHours ? "✓" : "—"}</td>
               <td>${s.nightExempt ? "✓" : "—"}</td>
               <td>${s.annualPaidLeaveGranted}日</td>
@@ -120,7 +143,8 @@ function render(container, ctx) {
                 <button class="btn btn-ghost btn-sm" data-edit="${s.id}">編集</button>
                 <button class="btn btn-ghost btn-sm" data-del="${s.id}" style="color:var(--danger);">削除</button>
               </td>
-            </tr>`).join("")}
+            </tr>`;
+          }).join("")}
         </tbody>
       </table>
     </div>

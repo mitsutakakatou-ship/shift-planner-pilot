@@ -1,7 +1,7 @@
 // 希望休・既存の割当を尊重しつつ、未設定のセルだけを要件に沿って自動で埋める。
 // 方針：欠員が出る場合も無理に辻褄を合わせず空欄のまま残し、ダッシュボードの警告に委ねる。
 import { daysInMonth, toISO, monthlyHolidayThreshold, patternDurationMin } from "./rules.js";
-import { assignmentKey } from "./data.js";
+import { assignmentKey, allowedPatternIdsFor } from "./data.js";
 
 function timeToMin(t) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
 
@@ -18,7 +18,11 @@ function generateMonthlySchedule(state, year, month) {
   const kihatsukanStaff = staff.filter((s) => s.role === "児童発達支援管理責任者");
 
   const track = {};
-  staff.forEach((s) => { track[s.id] = { workDays: 0, nightCount: 0, consecutiveWork: 0, nightYesterday: false, lastShiftEndAbs: null, weekMinutes: {} }; });
+  const allowedFor = {};
+  staff.forEach((s) => {
+    track[s.id] = { workDays: 0, nightCount: 0, consecutiveWork: 0, nightYesterday: false, lastShiftEndAbs: null, weekMinutes: {} };
+    allowedFor[s.id] = new Set(allowedPatternIdsFor(s, patterns));
+  });
 
   let filledCount = 0;
   let skippedFixed = 0;
@@ -69,6 +73,7 @@ function generateMonthlySchedule(state, year, month) {
 
     const eligible = (s, pattern) => {
       if (!isFree(s)) return false;
+      if (!allowedFor[s.id].has(pattern.id)) return false;
       const t = track[s.id];
       if (t.nightYesterday) return false; // 夜勤明けは休み
       if (t.workDays >= maxWorkDays) return false;

@@ -1,5 +1,6 @@
 // シフト表の要件チェック（依頼書 No.1〜18 のうち、日次データから機械的に判定できる項目を実装）
 // 実装できない/施設側の目視確認が必要な項目は checklistOnly として別扱いにする。
+import { allowedPatternIdsFor } from "./data.js";
 
 function pad2(n) { return String(n).padStart(2, "0"); }
 function toISO(y, m, d) { return `${y}-${pad2(m)}-${pad2(d)}`; }
@@ -69,6 +70,7 @@ function evaluateMonth(state, year, month) {
 
   // --- 職員ごとの集計・週次/連続日チェック ---
   for (const s of staff) {
+    const allowedSet = new Set(allowedPatternIdsFor(s, patterns));
     let consecutiveNoOff = 0;
     let lastShiftEnd = null; // {dateIndex, endAbsMin}
     for (let d = 1; d <= nd; d++) {
@@ -90,6 +92,10 @@ function evaluateMonth(state, year, month) {
 
       if (pattern) {
         consecutiveNoOff++;
+        if (!allowedSet.has(pattern.id)) {
+          warnings.push({ rule: "対応パターン", date: dateISO, staff: s.name, severity: "medium",
+            message: `${dateISO} ${s.name}：対応可能に設定されていない勤務パターン（${pattern.name}）が割り当てられています` });
+        }
         const dur = patternDurationMin(pattern);
         perStaff[s.id].workMin += dur;
         perStaff[s.id].nightMin += patternNightMinutes(pattern);

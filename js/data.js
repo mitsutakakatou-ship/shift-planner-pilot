@@ -19,8 +19,13 @@ function defaultPatterns() {
   ];
 }
 
+function defaultAllowedPatternIds() {
+  return defaultPatterns().map((p) => p.id);
+}
+
 function defaultStaff() {
   const staff = [];
+  const allowed = defaultAllowedPatternIds();
   let idx = 0;
   for (let u = 1; u <= 4; u++) {
     for (let k = 0; k < 4; k++) {
@@ -35,14 +40,15 @@ function defaultStaff() {
         reducedHoursLimitMin: 360,
         nightExempt: idx === 3,
         annualPaidLeaveGranted: 12,
+        allowedPatternIds: [...allowed],
       });
       idx++;
     }
   }
-  staff.push({ id: "s_kihatsukan", name: genName(idx++), role: "児童発達支援管理責任者", unit: null, employment: "常勤", qualified: true, reducedHours: false, nightExempt: false, annualPaidLeaveGranted: 12 });
-  staff.push({ id: "s_nurse1", name: genName(idx++), role: "看護師", unit: 1, employment: "常勤", qualified: true, reducedHours: false, nightExempt: false, annualPaidLeaveGranted: 12 });
-  staff.push({ id: "s_nurse2", name: genName(idx++), role: "看護師", unit: 3, employment: "非常勤", qualified: true, reducedHours: false, nightExempt: false, annualPaidLeaveGranted: 10 });
-  staff.push({ id: "s_manager", name: genName(idx++), role: "管理者", unit: null, employment: "常勤", qualified: true, reducedHours: false, nightExempt: false, annualPaidLeaveGranted: 15 });
+  staff.push({ id: "s_kihatsukan", name: genName(idx++), role: "児童発達支援管理責任者", unit: null, employment: "常勤", qualified: true, reducedHours: false, nightExempt: false, annualPaidLeaveGranted: 12, allowedPatternIds: [...allowed] });
+  staff.push({ id: "s_nurse1", name: genName(idx++), role: "看護師", unit: 1, employment: "常勤", qualified: true, reducedHours: false, nightExempt: false, annualPaidLeaveGranted: 12, allowedPatternIds: [...allowed] });
+  staff.push({ id: "s_nurse2", name: genName(idx++), role: "看護師", unit: 3, employment: "非常勤", qualified: true, reducedHours: false, nightExempt: false, annualPaidLeaveGranted: 10, allowedPatternIds: allowed.filter((id) => id !== "p_night") });
+  staff.push({ id: "s_manager", name: genName(idx++), role: "管理者", unit: null, employment: "常勤", qualified: true, reducedHours: false, nightExempt: false, annualPaidLeaveGranted: 15, allowedPatternIds: allowed.filter((id) => id !== "p_night") });
   return staff;
 }
 
@@ -90,4 +96,10 @@ function assignmentKey(staffId, dateISO) {
   return `${staffId}|${dateISO}`;
 }
 
-export { loadState, saveState, resetState, defaultState, assignmentKey };
+// allowedPatternIds が未設定（旧データ）の場合は「全パターン対応可」として扱う
+function allowedPatternIdsFor(staffMember, patterns) {
+  if (staffMember.allowedPatternIds && staffMember.allowedPatternIds.length > 0) return staffMember.allowedPatternIds;
+  return patterns.map((p) => p.id);
+}
+
+export { loadState, saveState, resetState, defaultState, assignmentKey, allowedPatternIdsFor };
